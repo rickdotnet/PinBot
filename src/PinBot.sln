@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PinBot.Bot", "PinBot.Bot\PinBot.Bot.csproj", "{F1EF5BC4-94BC-4CAA-BA71-52904D4EC598}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PinBot.Core", "PinBot.Core\PinBot.Core.csproj", "{DF6EC4AC-5FF0-4E50-900C-A730B317D935}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PinBot.Data", "PinBot.Data\PinBot.Data.csproj", "{2360FDA3-9CDF-425F-8501-1E9EB344D764}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F1EF5BC4-94BC-4CAA-BA71-52904D4EC598}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1EF5BC4-94BC-4CAA-BA71-52904D4EC598}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1EF5BC4-94BC-4CAA-BA71-52904D4EC598}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1EF5BC4-94BC-4CAA-BA71-52904D4EC598}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF6EC4AC-5FF0-4E50-900C-A730B317D935}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF6EC4AC-5FF0-4E50-900C-A730B317D935}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF6EC4AC-5FF0-4E50-900C-A730B317D935}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF6EC4AC-5FF0-4E50-900C-A730B317D935}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2360FDA3-9CDF-425F-8501-1E9EB344D764}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2360FDA3-9CDF-425F-8501-1E9EB344D764}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2360FDA3-9CDF-425F-8501-1E9EB344D764}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2360FDA3-9CDF-425F-8501-1E9EB344D764}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

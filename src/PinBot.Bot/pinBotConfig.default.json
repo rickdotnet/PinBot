@@ -1,0 +1,4 @@
+﻿{
+    "ConnectionString": "server=localhost;user=root;database=<your db name>;port=3306;password=<your db password>;Allow User Variables=true;",
+    "Token": "<your token here>"
+}

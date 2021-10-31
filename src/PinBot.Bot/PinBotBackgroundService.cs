@@ -15,7 +15,6 @@ namespace PinBot.Application
         private readonly IServiceScopeFactory serviceScopeFactory;
         private DiscordClient discordClient;
         private IMediator mediator;
-        private IServiceScope scope;
 
         public PinBotBackgroundService(IServiceScopeFactory serviceScopeFactory)
         {
@@ -25,7 +24,6 @@ namespace PinBot.Application
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             using var scope = serviceScopeFactory.CreateScope();
-            this.scope = scope;
 
             discordClient = scope.ServiceProvider.GetRequiredService<DiscordClient>();
             mediator = scope.ServiceProvider.GetRequiredService<IMediator>();

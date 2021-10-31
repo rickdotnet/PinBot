@@ -15,8 +15,6 @@ namespace PinBot.Core
         // messageId, userId
         private static Dictionary<ulong, ulong> tempAuth = new();
 
-        // private int test = 0;
-        // private static int staticTest = 0;
         public async Task Handle(ReactionAddedNotification notification, CancellationToken cancellationToken)
         {
             if (notification.Message.Pinned) return;
@@ -47,9 +45,6 @@ namespace PinBot.Core
 
         public Task Handle(ReactionsClearedNotification notification, CancellationToken cancellationToken)
         {
-            // test += 1;
-            // staticTest += 1;
-
             return Task.CompletedTask;
         }
     }

@@ -24,36 +24,33 @@ namespace PinBot.Application
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            using (var scope = serviceScopeFactory.CreateScope())
+            using var scope = serviceScopeFactory.CreateScope();
+            this.scope = scope;
+
+            discordClient = scope.ServiceProvider.GetRequiredService<DiscordClient>();
+            mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+            cancellationToken.Register(OnStopping);
+
+            discordClient.MessageReactionAdded += ReactionAdded;
+            discordClient.MessageReactionRemoved += ReactionRemovedAsync;
+            discordClient.MessageReactionsCleared += ReactionsClearedAsync;
+
+            await discordClient.ConnectAsync();
+
+            await Task.Delay(-1, cancellationToken);
+
+            void OnStopping()
             {
-                this.scope = scope;
-
-                discordClient = scope.ServiceProvider.GetRequiredService<DiscordClient>();
-                mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-                cancellationToken.Register(OnStopping);
-
-                discordClient.MessageReactionAdded += ReactionAdded;
-                discordClient.MessageReactionRemoved += ReactionRemovedAsync;
-                discordClient.MessageReactionsCleared += ReactionsClearedAsync;
-
-                await discordClient.ConnectAsync();
-
-                await Task.Delay(-1, cancellationToken);
-
-                void OnStopping()
-                {
-                    discordClient.MessageReactionAdded -= ReactionAdded;
-                    discordClient.MessageReactionRemoved -= ReactionRemovedAsync;
-                    discordClient.MessageReactionsCleared -= ReactionsClearedAsync;
-                }
+                discordClient.MessageReactionAdded -= ReactionAdded;
+                discordClient.MessageReactionRemoved -= ReactionRemovedAsync;
+                discordClient.MessageReactionsCleared -= ReactionsClearedAsync;
             }
         }
 
         private Task ReactionsClearedAsync(DiscordClient sender, MessageReactionsClearEventArgs e)
-        {
-            Console.WriteLine("Reactions Cleared");
-            return Task.CompletedTask;
-        }
+            => mediator.Publish(
+                new ReactionsClearedNotification(e.Message)
+            );
 
         private Task ReactionRemovedAsync(DiscordClient sender, MessageReactionRemoveEventArgs e)
             => mediator.Publish(

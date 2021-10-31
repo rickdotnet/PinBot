@@ -6,12 +6,10 @@ namespace PinBot.Core.Notifications
     public class ReactionsClearedNotification : INotification
     {
         public DiscordMessage Message { get; }
-        public DiscordUser User { get; }
 
-        public ReactionsClearedNotification(DiscordEmoji emoji, DiscordMessage message, DiscordUser user)
+        public ReactionsClearedNotification(DiscordMessage message)
         {
             Message = message;
-            User = user;
         }
     }
 }

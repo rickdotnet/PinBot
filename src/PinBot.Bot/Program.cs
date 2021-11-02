@@ -44,7 +44,7 @@ namespace PinBot.Application
                 typeof(Program), 
                 typeof(ReactionMonitor) // TODO: figure out why/how/if it matters, but notifications all have their own scope
             );
-            services.AddScoped<ReactionMonitor>();
+            // services.AddScoped<ReactionMonitor>();
             services.AddSingleton(p =>
                 new DiscordClient(
                     new DiscordConfiguration

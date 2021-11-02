@@ -1,8 +1,8 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
+using DSharpPlus.SlashCommands;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -26,12 +26,20 @@ namespace PinBot.Application
             using var scope = serviceScopeFactory.CreateScope();
 
             discordClient = scope.ServiceProvider.GetRequiredService<DiscordClient>();
+
+            var slashExtension = discordClient.UseSlashCommands(
+                new SlashCommandsConfiguration {Services = scope.ServiceProvider});
+            slashExtension.RegisterCommands<SlashCommands>();
+
+
             mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
             cancellationToken.Register(OnStopping);
 
             discordClient.MessageReactionAdded += ReactionAdded;
             discordClient.MessageReactionRemoved += ReactionRemovedAsync;
             discordClient.MessageReactionsCleared += ReactionsClearedAsync;
+            // discordClient.MessageDeleted // TODO: make sure we clean up in the DB
+            // discordClient.ChannelPinsUpdated // TODO: Track non-reaction pins and add them all the same
 
             await discordClient.ConnectAsync();
 

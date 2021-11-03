@@ -18,7 +18,7 @@ namespace PinBot.Application
             this.authorizationService = authorizationService;
         }
         [SlashCommand("auth-user", "Auth a user to pin messages in this channel")]
-        [SlashRequirePermissions(Permissions.Administrator)]
+        [SlashRequirePermissions(Permissions.ManageMessages)]
         public async Task AuthCommand(InteractionContext ctx, [Option("User", "User to authorize")] DiscordUser user)
         {
             // TODO: see if we need to create a response first, then modify it because of timing
@@ -35,19 +35,19 @@ namespace PinBot.Application
             }
         }
         [SlashCommand("auth-role", "Auth a role to pin messages in this channel")]
-        [SlashRequirePermissions(Permissions.Administrator)]
+        [SlashRequirePermissions(Permissions.ManageMessages)]
         public async Task AuthCommand(InteractionContext ctx, [Option("Role", "Role to authorize")] DiscordRole role)
         {
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Auth Success! {role.Mention}"));
         }
         [SlashCommand("auth-user-full", "Auth a user or role to pin messages in ANY channel")]
-        [SlashRequirePermissions(Permissions.Administrator)]
+        [SlashRequirePermissions(Permissions.ManageMessages)]
         public async Task AuthFullCommand(InteractionContext ctx, [Option("User", "User to authorize")] DiscordUser user)
         {
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Auth-Full Success! {user.Mention}"));
         }
         [SlashCommand("auth-role-full", "Auth a user or role to pin messages in ANY channel")]
-        [SlashRequirePermissions(Permissions.Administrator)]
+        [SlashRequirePermissions(Permissions.ManageMessages)]
         public async Task AuthFullCommand(InteractionContext ctx, [Option("Role", "Role to authorize")] DiscordRole role)
         {
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Auth-Full Success! {role.Mention}"));

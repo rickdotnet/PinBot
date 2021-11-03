@@ -43,5 +43,16 @@ namespace PinBot.Core.Services
             var rows = await pinBotContext.SaveChangesAsync();
             return rows > 0;
         }
+        public async Task<bool> SoftDeletePinAsync(ulong messageId)
+        {
+            var existing = await GetPinByMessageIdAsync(messageId);
+            if (existing == null) return false;
+
+            existing.IsMessageDeleted = true;
+            existing.Timestamp = DateTime.Now;
+            
+            var rows = await pinBotContext.SaveChangesAsync();
+            return rows > 0;
+        }
     }
 }

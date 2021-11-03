@@ -10,6 +10,6 @@ namespace PinBot.Data.Entities
         public ushort PinBoardMappingId { get; set; }
         public ulong PinBoardChannelId { get; set; }
         public ulong? PinnedMessageChannelId { get; set; }
-        public ulong IsGlobalBoard { get; set; }
+        public bool IsGlobalBoard { get; set; }
     }
 }

@@ -81,6 +81,7 @@ namespace PinBot.Application
             });
             services.AddScoped<AuthorizationService>();
             services.AddScoped<PinService>();
+            services.AddScoped<PinBoardService>(); 
         }
     }
 }

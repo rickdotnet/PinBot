@@ -16,7 +16,8 @@ namespace PinBot.Core
     public class ReactionMonitor :
         INotificationHandler<ReactionAddedNotification>,
         INotificationHandler<ReactionRemovedNotification>,
-        INotificationHandler<ReactionsClearedNotification>
+        INotificationHandler<ReactionsClearedNotification>,
+        INotificationHandler<MessageDeletedNotification> // TODO: Move this to another class; it shouldn't live here
     {
         private readonly DiscordClient discordClient;
         private readonly PinBotConfig pinBotConfig;
@@ -38,9 +39,6 @@ namespace PinBot.Core
             this.logger = logger;
         }
 
-        // messageId, userId
-        //private static Dictionary<ulong, ulong> tempAuth = new();
-
         public async Task Handle(ReactionAddedNotification notification, CancellationToken cancellationToken)
         {
             logger.LogInformation("Start Handling ReactionAddedNotification");
@@ -57,7 +55,7 @@ namespace PinBot.Core
                 })
             )
             {
-                await notification.Message.PinAsync();
+                await notification.Message.PinAsync(); // TODO: move this to PinService
                 var success = await pinService.TrackPinAsync(new AddPinRequest
                 {
                     MessageId = notification.Message.Id,
@@ -72,6 +70,7 @@ namespace PinBot.Core
                         $"{notification.User.Mention} just pinned a message in {notification.Message.Channel.Mention}");
                 }
             }
+
             logger.LogInformation("End Handling ReactionAddedNotification");
         }
 
@@ -97,12 +96,15 @@ namespace PinBot.Core
                 )
             )
             {
-                await notification.Message.UnpinAsync();
-                await pinService.RemovePinAsync(notification.Message.Id);
+                await notification.Message.UnpinAsync(); // TODO: move this to PinService
+                var success = await pinService.RemovePinAsync(notification.Message.Id);
 
-                await LogToPushPinChannel(
-                    $"{notification.User.Mention} just un-pinned a message in {notification.Message.Channel.Mention}");
-                
+                if (success)
+                {
+                    await LogToPushPinChannel(
+                        $"{notification.User.Mention} just un-pinned a message in {notification.Message.Channel.Mention}");
+                }
+
                 logger.LogInformation("End Handling ReactionRemovedNotification");
             }
         }
@@ -111,6 +113,12 @@ namespace PinBot.Core
         {
             return Task.CompletedTask;
         }
+        
+        // TODO: Move this to another class; it shouldn't live here
+        public Task Handle(MessageDeletedNotification notification, CancellationToken cancellationToken)
+        {
+            return pinService.SoftDeletePinAsync(notification.MessageId);
+        }
 
         private Task LogToPushPinChannel(string message)
             =>
@@ -118,6 +126,7 @@ namespace PinBot.Core
                     .Channels.First(x => x.Key == pinBotConfig.TempChannelId)
                     .Value // TODO: this needs to be swapped to "PinBoard"
                     .SendMessageAsync(message);
+
         // TODO: clean these duplicate methods up
         private static bool IsAdmin(ReactionAddedNotification notification)
         {
@@ -136,5 +145,7 @@ namespace PinBot.Core
                 Permissions.None;
             return isAdmin;
         }
+
+        
     }
 }

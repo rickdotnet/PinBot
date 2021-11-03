@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
 using DSharpPlus.SlashCommands;
+using Emzi0767.Utilities;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -18,7 +19,8 @@ namespace PinBot.Application
         private DiscordClient discordClient;
         private IMediator mediator;
 
-        public PinBotBackgroundService(IServiceScopeFactory serviceScopeFactory, ILogger<PinBotBackgroundService> logger)
+        public PinBotBackgroundService(IServiceScopeFactory serviceScopeFactory,
+            ILogger<PinBotBackgroundService> logger)
         {
             this.serviceScopeFactory = serviceScopeFactory;
             this.logger = logger;
@@ -40,9 +42,8 @@ namespace PinBot.Application
             discordClient.MessageReactionAdded += ReactionAddedAsync;
             discordClient.MessageReactionRemoved += ReactionRemovedAsync;
             discordClient.MessageReactionsCleared += ReactionsClearedAsync;
-            // discordClient.MessageDeleted // TODO: make sure we clean up in the DB
-            // discordClient.ChannelPinsUpdated // TODO: Track non-reaction pins and add them all the same
-
+            discordClient.MessageDeleted += MessageDeletedAsync;
+            discordClient.ChannelPinsUpdated += ChannelPinsUpdatedAsync; // TODO: figure out what event we need for pins
             await discordClient.ConnectAsync();
 
             await Task.Delay(-1, cancellationToken);
@@ -52,7 +53,23 @@ namespace PinBot.Application
                 discordClient.MessageReactionAdded -= ReactionAddedAsync;
                 discordClient.MessageReactionRemoved -= ReactionRemovedAsync;
                 discordClient.MessageReactionsCleared -= ReactionsClearedAsync;
+                discordClient.MessageDeleted -= MessageDeletedAsync;
             }
+        }
+
+        private Task MessageDeletedAsync(DiscordClient sender, MessageDeleteEventArgs e)
+        {
+            logger.LogInformation("Entering PinBotBackgroundService.MessageDeletedAsync");
+            return mediator.Publish(
+                new MessageDeletedNotification {MessageId = e.Message.Id}
+            );
+        }
+
+        private Task ChannelPinsUpdatedAsync(DiscordClient sender, ChannelPinsUpdateEventArgs e)
+        {
+            logger.LogInformation("Entering PinBotBackgroundService.ChannelPinsUpdatedAsync");
+            return Task.CompletedTask;
+            //throw new System.NotImplementedException();
         }
 
         private async Task ReactionAddedAsync(DiscordClient sender, MessageReactionAddEventArgs e)

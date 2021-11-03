@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using DSharpPlus.Entities;
 using Microsoft.EntityFrameworkCore;
 using PinBot.Data;
 using PinBot.Data.Entities;
@@ -51,7 +52,8 @@ namespace PinBot.Core.Services
         public Task<bool> IsAuthorizedAsync(AuthorizedUserRequest request)
         {
             if (request.IsAdmin) return Task.FromResult(true);
-
+            if (request.Message == null) return Task.FromResult(false);
+            
             return pinBotContext.Authorizations.AnyAsync(x =>
                 (
                     (request.UserId != null && x.UserOrRoleId == request.UserId)
@@ -60,9 +62,9 @@ namespace PinBot.Core.Services
                 )
                 &&
                 (
-                    (request.GuildId != null && x.GuildOrChannelId == request.GuildId)
+                    (request.Message.Channel.GuildId != null && x.GuildOrChannelId == request.Message.Channel.GuildId)
                     ||
-                    (request.GuildId != null && x.GuildOrChannelId == request.ChannelId)
+                    (request.Message.ChannelId != null && x.GuildOrChannelId == request.Message.ChannelId)
                 )
             );
         }

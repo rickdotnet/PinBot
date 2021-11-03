@@ -23,19 +23,24 @@ namespace PinBot.Core
         private readonly PinBotConfig pinBotConfig;
         private readonly AuthorizationService authorizationService;
         private readonly PinService pinService;
+        private readonly PinBoardService pinBoardService;
         private readonly ILogger<ReactionMonitor> logger;
 
         private const string PIN_EMOJI = "📌";
 
-        public ReactionMonitor(DiscordClient discordClient, PinBotConfig pinBotConfig,
+        public ReactionMonitor(
+            DiscordClient discordClient, 
+            PinBotConfig pinBotConfig,
             AuthorizationService authorizationService,
             PinService pinService,
+            PinBoardService pinBoardService,
             ILogger<ReactionMonitor> logger)
         {
             this.discordClient = discordClient;
             this.pinBotConfig = pinBotConfig;
             this.authorizationService = authorizationService;
             this.pinService = pinService;
+            this.pinBoardService = pinBoardService;
             this.logger = logger;
         }
 
@@ -50,8 +55,7 @@ namespace PinBot.Core
                     IsAdmin = IsAdmin(notification),
                     UserId = notification.User.Id,
                     RoleIds = (notification.User as DiscordMember)?.Roles?.Select(x => x.Id).ToArray(),
-                    GuildId = notification.Message.Channel.GuildId,
-                    ChannelId = notification.Message.ChannelId
+                    Message = notification.Message
                 })
             )
             {
@@ -66,7 +70,8 @@ namespace PinBot.Core
 
                 if (success)
                 {
-                    await LogToPushPinChannel(
+                    await pinBoardService.LogToPinboardsAsync(
+                        notification.Message.ChannelId,
                         $"{notification.User.Mention} just pinned a message in {notification.Message.Channel.Mention}");
                 }
             }
@@ -88,8 +93,7 @@ namespace PinBot.Core
                             IsAdmin = IsAdmin(notification),
                             UserId = notification.User.Id,
                             RoleIds = (notification.User as DiscordMember)?.Roles?.Select(x => x.Id).ToArray(),
-                            GuildId = notification.Message.Channel.GuildId,
-                            ChannelId = notification.Message.ChannelId
+                            Message = notification.Message
                         },
                         MessageId = notification.Message.Id
                     }
@@ -101,8 +105,10 @@ namespace PinBot.Core
 
                 if (success)
                 {
-                    await LogToPushPinChannel(
-                        $"{notification.User.Mention} just un-pinned a message in {notification.Message.Channel.Mention}");
+                    // TODO: don't need to log this once pin boards are 
+                    await pinBoardService.LogToPinboardsAsync(
+                        notification.Message.ChannelId,
+                        $"{notification.User.Mention} just pinned a message in {notification.Message.Channel.Mention}");
                 }
 
                 logger.LogInformation("End Handling ReactionRemovedNotification");
@@ -119,13 +125,6 @@ namespace PinBot.Core
         {
             return pinService.SoftDeletePinAsync(notification.MessageId);
         }
-
-        private Task LogToPushPinChannel(string message)
-            =>
-                discordClient.Guilds.First().Value
-                    .Channels.First(x => x.Key == pinBotConfig.TempChannelId)
-                    .Value // TODO: this needs to be swapped to "PinBoard"
-                    .SendMessageAsync(message);
 
         // TODO: clean these duplicate methods up
         private static bool IsAdmin(ReactionAddedNotification notification)

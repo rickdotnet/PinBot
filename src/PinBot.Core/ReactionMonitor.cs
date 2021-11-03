@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using PinBot.Core.Notifications;
 using PinBot.Core.Services;
 using PinBot.Data.Models;
@@ -21,17 +22,20 @@ namespace PinBot.Core
         private readonly PinBotConfig pinBotConfig;
         private readonly AuthorizationService authorizationService;
         private readonly PinService pinService;
+        private readonly ILogger<ReactionMonitor> logger;
 
         private const string PIN_EMOJI = "📌";
 
         public ReactionMonitor(DiscordClient discordClient, PinBotConfig pinBotConfig,
             AuthorizationService authorizationService,
-            PinService pinService)
+            PinService pinService,
+            ILogger<ReactionMonitor> logger)
         {
             this.discordClient = discordClient;
             this.pinBotConfig = pinBotConfig;
             this.authorizationService = authorizationService;
             this.pinService = pinService;
+            this.logger = logger;
         }
 
         // messageId, userId
@@ -39,6 +43,7 @@ namespace PinBot.Core
 
         public async Task Handle(ReactionAddedNotification notification, CancellationToken cancellationToken)
         {
+            logger.LogInformation("Start Handling ReactionAddedNotification");
             if (notification.Message.Pinned) return;
             if (notification.Emoji.Name is not PIN_EMOJI) return;
 
@@ -67,10 +72,12 @@ namespace PinBot.Core
                         $"{notification.User.Mention} just pinned a message in {notification.Message.Channel.Mention}");
                 }
             }
+            logger.LogInformation("End Handling ReactionAddedNotification");
         }
 
         public async Task Handle(ReactionRemovedNotification notification, CancellationToken cancellationToken)
         {
+            logger.LogInformation("Start Handling ReactionRemovedNotification");
             if (!notification.Message.Pinned) return;
             if (notification.Emoji.Name is not PIN_EMOJI) return;
 
@@ -95,6 +102,8 @@ namespace PinBot.Core
 
                 await LogToPushPinChannel(
                     $"{notification.User.Mention} just un-pinned a message in {notification.Message.Channel.Mention}");
+                
+                logger.LogInformation("End Handling ReactionRemovedNotification");
             }
         }
 

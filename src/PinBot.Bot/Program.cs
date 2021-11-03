@@ -6,10 +6,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PinBot.Core;
 using PinBot.Core.Services;
 using PinBot.Data;
+using Serilog;
+using Serilog.Events;
 
 namespace PinBot.Application
 {
@@ -18,6 +21,12 @@ namespace PinBot.Application
         static async Task Main(string[] args)
         {
             using var host = CreateHostBuilder(args).Build();
+            var loggerConfig = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                .WriteTo.Console()
+                .Enrich.FromLogContext();
+            Log.Logger = loggerConfig.CreateLogger();
             await host.RunAsync();
 
             // we shouldn't get here
@@ -26,6 +35,7 @@ namespace PinBot.Application
 
         static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .UseSerilog()
                 .ConfigureAppConfiguration((context, builder) =>
                 {
                     // Add other configuration files...
@@ -52,6 +62,7 @@ namespace PinBot.Application
                 new DiscordClient(
                     new DiscordConfiguration
                     {
+                        LoggerFactory = new LoggerFactory().AddSerilog(),
                         Token = p.GetRequiredService<PinBotConfig>().Token,
                         TokenType = TokenType.Bot
                     }

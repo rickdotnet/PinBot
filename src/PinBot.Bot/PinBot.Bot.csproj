@@ -18,6 +18,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\PinBot.Core\PinBot.Core.csproj" />
+      <ProjectReference Include="..\PinBot.Data\PinBot.Data.csproj" />
     </ItemGroup>
 
 </Project>

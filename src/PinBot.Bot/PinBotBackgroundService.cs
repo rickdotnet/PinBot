@@ -1,12 +1,15 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using DSharpPlus;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.SlashCommands;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PinBot.Core.Notifications;
+using PinBot.Data;
+using PinBot.Data.Entities;
 
 namespace PinBot.Application
 {
@@ -31,11 +34,10 @@ namespace PinBot.Application
                 new SlashCommandsConfiguration {Services = scope.ServiceProvider});
             slashExtension.RegisterCommands<SlashCommands>();
 
-
             mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
             cancellationToken.Register(OnStopping);
 
-            discordClient.MessageReactionAdded += ReactionAdded;
+            discordClient.MessageReactionAdded += ReactionAddedAsync;
             discordClient.MessageReactionRemoved += ReactionRemovedAsync;
             discordClient.MessageReactionsCleared += ReactionsClearedAsync;
             // discordClient.MessageDeleted // TODO: make sure we clean up in the DB
@@ -47,25 +49,37 @@ namespace PinBot.Application
 
             void OnStopping()
             {
-                discordClient.MessageReactionAdded -= ReactionAdded;
+                discordClient.MessageReactionAdded -= ReactionAddedAsync;
                 discordClient.MessageReactionRemoved -= ReactionRemovedAsync;
                 discordClient.MessageReactionsCleared -= ReactionsClearedAsync;
             }
         }
 
+        private async Task ReactionAddedAsync(DiscordClient sender, MessageReactionAddEventArgs e)
+        {
+            if (e.Channel.GuildId == null) return;
+            var nonCachedMessage = await e.Channel.GetMessageAsync(e.Message.Id);
+            await mediator.Publish(
+                new ReactionAddedNotification(e.Emoji, nonCachedMessage, e.User)
+            );
+        }
+
+        private async Task ReactionRemovedAsync(DiscordClient sender, MessageReactionRemoveEventArgs e)
+        {
+            if (e.Channel.GuildId == null) return;
+            var nonCachedMessage = await e.Channel.GetMessageAsync(e.Message.Id);
+            await mediator.Publish(
+                new ReactionRemovedNotification(e.Emoji, nonCachedMessage, e.User)
+            );
+        }
+
         private Task ReactionsClearedAsync(DiscordClient sender, MessageReactionsClearEventArgs e)
-            => mediator.Publish(
+        {
+            if (e.Channel.GuildId == null) return Task.CompletedTask;
+
+            return mediator.Publish(
                 new ReactionsClearedNotification(e.Message)
             );
-
-        private Task ReactionRemovedAsync(DiscordClient sender, MessageReactionRemoveEventArgs e)
-            => mediator.Publish(
-                new ReactionRemovedNotification(e.Emoji, e.Message, e.User)
-            );
-
-        private Task ReactionAdded(DiscordClient sender, MessageReactionAddEventArgs e)
-            => mediator.Publish(
-                new ReactionAddedNotification(e.Emoji, e.Message, e.User)
-            );
+        }
     }
 }

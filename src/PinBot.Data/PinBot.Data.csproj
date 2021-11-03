@@ -10,6 +10,12 @@
       <PackageReference Include="DSharpPlus.Interactivity" Version="4.2.0-nightly-01038" />
       <PackageReference Include="DSharpPlus.Rest" Version="4.2.0-nightly-01038" />
       <PackageReference Include="DSharpPlus.SlashCommands" Version="4.2.0-nightly-01038" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.11" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.11">
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        <PrivateAssets>all</PrivateAssets>
+      </PackageReference>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="5.0.11" />
       <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="5.0.2" />
     </ItemGroup>
 

@@ -4,8 +4,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DSharpPlus;
+using DSharpPlus.Entities;
 using MediatR;
 using PinBot.Core.Notifications;
+using PinBot.Core.Services;
+using PinBot.Data.Models;
 
 namespace PinBot.Core
 {
@@ -15,46 +18,84 @@ namespace PinBot.Core
         INotificationHandler<ReactionsClearedNotification>
     {
         private readonly DiscordClient discordClient;
+        private readonly PinBotConfig pinBotConfig;
+        private readonly AuthorizationService authorizationService;
+        private readonly PinService pinService;
 
-        public ReactionMonitor(DiscordClient discordClient)
+        private const string PIN_EMOJI = "📌";
+
+        public ReactionMonitor(DiscordClient discordClient, PinBotConfig pinBotConfig,
+            AuthorizationService authorizationService,
+            PinService pinService)
         {
             this.discordClient = discordClient;
+            this.pinBotConfig = pinBotConfig;
+            this.authorizationService = authorizationService;
+            this.pinService = pinService;
         }
 
         // messageId, userId
-        private static Dictionary<ulong, ulong> tempAuth = new();
+        //private static Dictionary<ulong, ulong> tempAuth = new();
 
         public async Task Handle(ReactionAddedNotification notification, CancellationToken cancellationToken)
         {
             if (notification.Message.Pinned) return;
-            if (notification.Emoji.Name is not "📌") return;
+            if (notification.Emoji.Name is not PIN_EMOJI) return;
 
-            if (tempAuth.ContainsKey(notification.Message.Id))
-                tempAuth[notification.Message.Id] = notification.User.Id; // should never hit
-            else
-                tempAuth.Add(notification.Message.Id, notification.User.Id);
+            if (await authorizationService.IsAuthorizedAsync(new AuthorizedUserRequest
+                {
+                    IsAdmin = IsAdmin(notification),
+                    UserId = notification.User.Id,
+                    RoleIds = (notification.User as DiscordMember)?.Roles?.Select(x => x.Id).ToArray(),
+                    GuildId = notification.Message.Channel.GuildId,
+                    ChannelId = notification.Message.ChannelId
+                })
+            )
+            {
+                await notification.Message.PinAsync();
+                var success = await pinService.TrackPinAsync(new AddPinRequest
+                {
+                    MessageId = notification.Message.Id,
+                    GuildId = notification.Message.Channel.Guild.Id,
+                    ChannelId = notification.Message.ChannelId,
+                    PinnedUserId = notification.User.Id
+                });
 
-            await notification.Message.PinAsync();
-            await LogToPushPinChannel(
-                $"{notification.User.Mention} just pinned a message in {notification.Message.Channel.Mention}");
+                if (success)
+                {
+                    await LogToPushPinChannel(
+                        $"{notification.User.Mention} just pinned a message in {notification.Message.Channel.Mention}");
+                }
+            }
         }
 
         public async Task Handle(ReactionRemovedNotification notification, CancellationToken cancellationToken)
         {
             if (!notification.Message.Pinned) return;
-            if (notification.Emoji.Name is not "📌") return;
+            if (notification.Emoji.Name is not PIN_EMOJI) return;
 
-            if (tempAuth.ContainsKey(notification.Message.Id) &&
-                tempAuth[notification.Message.Id] == notification.User.Id)
+            if (await authorizationService.CanRemovePinAsync(
+                    new CanRemovePinRequest
+                    {
+                        AuthorizedUserRequest = new AuthorizedUserRequest
+                        {
+                            IsAdmin = IsAdmin(notification),
+                            UserId = notification.User.Id,
+                            RoleIds = (notification.User as DiscordMember)?.Roles?.Select(x => x.Id).ToArray(),
+                            GuildId = notification.Message.Channel.GuildId,
+                            ChannelId = notification.Message.ChannelId
+                        },
+                        MessageId = notification.Message.Id
+                    }
+                )
+            )
             {
                 await notification.Message.UnpinAsync();
-                tempAuth.Remove(notification.Message.Id);
-                
+                await pinService.RemovePinAsync(notification.Message.Id);
+
                 await LogToPushPinChannel(
                     $"{notification.User.Mention} just un-pinned a message in {notification.Message.Channel.Mention}");
             }
-            else
-                Console.WriteLine("Uh oh, bubba");
         }
 
         public Task Handle(ReactionsClearedNotification notification, CancellationToken cancellationToken)
@@ -65,7 +106,26 @@ namespace PinBot.Core
         private Task LogToPushPinChannel(string message)
             =>
                 discordClient.Guilds.First().Value
-                    .Channels.First(x => x.Key == 904452769182777405).Value
+                    .Channels.First(x => x.Key == pinBotConfig.TempChannelId)
+                    .Value // TODO: this needs to be swapped to "PinBoard"
                     .SendMessageAsync(message);
+        // TODO: clean these duplicate methods up
+        private static bool IsAdmin(ReactionAddedNotification notification)
+        {
+            var isAdmin =
+                (notification.Message.Channel.PermissionsFor(notification.User as DiscordMember) &
+                 Permissions.Administrator) !=
+                Permissions.None;
+            return isAdmin;
+        }
+
+        private static bool IsAdmin(ReactionRemovedNotification notification)
+        {
+            var isAdmin =
+                (notification.Message.Channel.PermissionsFor(notification.User as DiscordMember) &
+                 Permissions.Administrator) !=
+                Permissions.None;
+            return isAdmin;
+        }
     }
 }

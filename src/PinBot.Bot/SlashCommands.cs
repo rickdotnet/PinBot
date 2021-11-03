@@ -4,21 +4,35 @@ using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
 using PinBot.Core;
+using PinBot.Core.Services;
 
 namespace PinBot.Application
 {
     
     public class SlashCommands : ApplicationCommandModule
     {
-        public SlashCommands(PinBotConfig config)
+        private readonly AuthorizationService authorizationService;
+
+        public SlashCommands(AuthorizationService authorizationService)
         {
-            var test = config.TestString;
+            this.authorizationService = authorizationService;
         }
         [SlashCommand("auth-user", "Auth a user to pin messages in this channel")]
         [SlashRequirePermissions(Permissions.Administrator)]
         public async Task AuthCommand(InteractionContext ctx, [Option("User", "User to authorize")] DiscordUser user)
         {
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Auth Success! {user.Mention}"));
+            // TODO: see if we need to create a response first, then modify it because of timing
+            var success = await authorizationService.AuthorizeIdAsync(user.Id, ctx.Channel.Id);
+            if (success)
+            {
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder().WithContent($"Auth Success!"));
+            }
+            else
+            {
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder().WithContent($"Auth Failed!"));   
+            }
         }
         [SlashCommand("auth-role", "Auth a role to pin messages in this channel")]
         [SlashRequirePermissions(Permissions.Administrator)]

@@ -2,11 +2,14 @@
 using System.Threading.Tasks;
 using DSharpPlus;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using PinBot.Core;
+using PinBot.Core.Services;
+using PinBot.Data;
 
 namespace PinBot.Application
 {
@@ -41,7 +44,7 @@ namespace PinBot.Application
             services.AddHostedService<PinBotBackgroundService>();
             services.AddMediatR(config =>
                     config.AsScoped(),
-                typeof(Program), 
+                typeof(Program),
                 typeof(ReactionMonitor) // TODO: figure out why/how/if it matters, but notifications all have their own scope
             );
             // services.AddScoped<ReactionMonitor>();
@@ -54,6 +57,19 @@ namespace PinBot.Application
                     }
                 )
             );
+            services.AddDbContextPool<PinBotContext>((p, options) =>
+            {
+                var config = p.GetService<PinBotConfig>() ?? throw new Exception("AddDbContextPool: Config is null");
+
+                options.UseMySql(
+                        config.ConnectionString,
+                        new MySqlServerVersion(new Version(config.MySqlMajor, config.MySqlMinor, config.MySqlBuild))
+                    )
+                    .EnableSensitiveDataLogging()
+                    .EnableDetailedErrors();
+            });
+            services.AddScoped<AuthorizationService>();
+            services.AddScoped<PinService>();
         }
     }
 }

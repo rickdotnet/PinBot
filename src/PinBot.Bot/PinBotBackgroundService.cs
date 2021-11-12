@@ -34,7 +34,7 @@ namespace PinBot.Application
 
             var slashExtension = discordClient.UseSlashCommands(
                 new SlashCommandsConfiguration {Services = scope.ServiceProvider});
-            slashExtension.RegisterCommands<SlashCommands>(426492725664153611);
+            slashExtension.RegisterCommands<SlashCommands>();
 
             mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
             cancellationToken.Register(OnStopping);

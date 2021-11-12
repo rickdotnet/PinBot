@@ -3,6 +3,5 @@
     "Token": "<your token here>",
     "MySqlMajor": 10,
     "MySqlMinor": 4,
-    "MySqlBuild": 21,
-    "TempChannelId": 134
+    "MySqlBuild": 21
 }

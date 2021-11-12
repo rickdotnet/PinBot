@@ -55,7 +55,7 @@ namespace PinBot.Application
             services.AddMediatR(config =>
                     config.AsScoped(),
                 typeof(Program),
-                typeof(ReactionMonitor) // TODO: figure out why/how/if it matters, but notifications all have their own scope
+                typeof(DiscordMonitor) // TODO: figure out why/how/if it matters, but notifications all have their own scope
             );
             // services.AddScoped<ReactionMonitor>();
             services.AddSingleton(p =>

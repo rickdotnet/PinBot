@@ -13,28 +13,29 @@ using PinBot.Data.Models;
 
 namespace PinBot.Core
 {
-    public class ReactionMonitor :
+    public class DiscordMonitor :
         INotificationHandler<ReactionAddedNotification>,
         INotificationHandler<ReactionRemovedNotification>,
         INotificationHandler<ReactionsClearedNotification>,
-        INotificationHandler<MessageDeletedNotification> // TODO: Move this to another class; it shouldn't live here
+        INotificationHandler<MessageDeletedNotification>,
+        INotificationHandler<ChannelPinsUpdatedNotification>
     {
         private readonly DiscordClient discordClient;
         private readonly PinBotConfig pinBotConfig;
         private readonly AuthorizationService authorizationService;
         private readonly PinService pinService;
         private readonly PinBoardService pinBoardService;
-        private readonly ILogger<ReactionMonitor> logger;
+        private readonly ILogger<DiscordMonitor> logger;
 
         private const string PIN_EMOJI = "📌";
 
-        public ReactionMonitor(
-            DiscordClient discordClient, 
+        public DiscordMonitor(
+            DiscordClient discordClient,
             PinBotConfig pinBotConfig,
             AuthorizationService authorizationService,
             PinService pinService,
             PinBoardService pinBoardService,
-            ILogger<ReactionMonitor> logger)
+            ILogger<DiscordMonitor> logger)
         {
             this.discordClient = discordClient;
             this.pinBotConfig = pinBotConfig;
@@ -119,20 +120,51 @@ namespace PinBot.Core
         {
             return Task.CompletedTask;
         }
-        
+
         // TODO: Move this to another class; it shouldn't live here
         public Task Handle(MessageDeletedNotification notification, CancellationToken cancellationToken)
         {
             return pinService.SoftDeletePinAsync(notification.MessageId);
         }
 
+        public async Task Handle(ChannelPinsUpdatedNotification notification, CancellationToken cancellationToken)
+        {
+            if (notification.LastPinTimestamp.HasValue)
+            {
+                var fuckshit = notification.DiscordChannel.Guild;
+                var audit = (await fuckshit.GetAuditLogsAsync()).FirstOrDefault();
+                
+                var fuck = (await notification.DiscordChannel.GetPinnedMessagesAsync());
+                var first = fuck.First();
+                var message =
+                    (await notification.DiscordChannel.GetPinnedMessagesAsync()).FirstOrDefault(x =>
+                        x.Timestamp.Equals(notification.LastPinTimestamp.Value));
+
+                //logger.LogDebug("Message is null? {0}", message == null);
+                // if (message != null)
+                //     await pinService.TrackPinAsync(new AddPinRequest
+                //     {
+                //         MessageId = message.Id,
+                //         ChannelId = message.ChannelId,
+                //         GuildId = notification.DiscordChannel.GuildId.Value,
+                //         PinnedUserId = notification.DiscordChannel.GuildId.Value // default to guild ID until we figure something out
+                //     });
+            }
+            else
+            {
+                // pin was removed
+            }
+        }
+
         // TODO: clean these duplicate methods up
         private static bool IsAdmin(ReactionAddedNotification notification)
         {
             var isAdmin =
-                (notification.Message.Channel.PermissionsFor(notification.User as DiscordMember) &
-                 Permissions.Administrator) !=
-                Permissions.None;
+                (
+                    notification.Message.Channel.PermissionsFor(notification.User as DiscordMember)
+                    & Permissions.Administrator
+                )
+                != Permissions.None;
             return isAdmin;
         }
 
@@ -144,7 +176,5 @@ namespace PinBot.Core
                 Permissions.None;
             return isAdmin;
         }
-
-        
     }
 }

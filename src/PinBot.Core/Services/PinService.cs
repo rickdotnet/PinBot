@@ -7,7 +7,7 @@ using PinBot.Data.Models;
 
 namespace PinBot.Core.Services
 {
-    public class PinService
+    public class PinService 
     {
         private readonly PinBotContext pinBotContext;
 

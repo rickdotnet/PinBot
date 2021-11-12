@@ -25,4 +25,10 @@
       <ProjectReference Include="..\PinBot.Data\PinBot.Data.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="pinBotConfig.default.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

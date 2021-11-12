@@ -2,7 +2,7 @@
 
 namespace PinBot.Data.Models
 {
-    public class AttachChannelToPinBoardRequest
+    public class ChannelPinBoardRequest
     {
         public ulong PinBoardChannelId { get; set; }
         public ulong? PinnedMessageChannelId { get; set; }

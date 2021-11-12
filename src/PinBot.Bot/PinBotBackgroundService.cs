@@ -34,7 +34,7 @@ namespace PinBot.Application
 
             var slashExtension = discordClient.UseSlashCommands(
                 new SlashCommandsConfiguration {Services = scope.ServiceProvider});
-            slashExtension.RegisterCommands<SlashCommands>();
+            slashExtension.RegisterCommands<SlashCommands>(426492725664153611);
 
             mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
             cancellationToken.Register(OnStopping);
@@ -43,7 +43,9 @@ namespace PinBot.Application
             discordClient.MessageReactionRemoved += ReactionRemovedAsync;
             discordClient.MessageReactionsCleared += ReactionsClearedAsync;
             discordClient.MessageDeleted += MessageDeletedAsync;
-            discordClient.ChannelPinsUpdated += ChannelPinsUpdatedAsync; // TODO: figure out what event we need for pins
+            discordClient.ChannelDeleted += ChannelDeletedAsync;
+            //  discordClient.ChannelPinsUpdated += ChannelPinsUpdatedAsync; // TODO: figure out what event we need for pins
+            
             await discordClient.ConnectAsync();
 
             await Task.Delay(-1, cancellationToken);
@@ -54,7 +56,17 @@ namespace PinBot.Application
                 discordClient.MessageReactionRemoved -= ReactionRemovedAsync;
                 discordClient.MessageReactionsCleared -= ReactionsClearedAsync;
                 discordClient.MessageDeleted -= MessageDeletedAsync;
+                discordClient.ChannelDeleted -= ChannelDeletedAsync;
+                // discordClient.ChannelPinsUpdated -= ChannelPinsUpdatedAsync; // TODO: figure out what event we need for pins
             }
+        }
+
+        private Task ChannelDeletedAsync(DiscordClient sender, ChannelDeleteEventArgs e)
+        {
+            logger.LogInformation("Entering PinBotBackgroundService.ChannelDeletedAsync");
+            return mediator.Publish(
+                new ChannelDeletedNotification {ChannelId = e.Channel.Id}
+            );
         }
 
         private Task MessageDeletedAsync(DiscordClient sender, MessageDeleteEventArgs e)
@@ -67,9 +79,15 @@ namespace PinBot.Application
 
         private Task ChannelPinsUpdatedAsync(DiscordClient sender, ChannelPinsUpdateEventArgs e)
         {
-            logger.LogInformation("Entering PinBotBackgroundService.ChannelPinsUpdatedAsync");
-            return Task.CompletedTask;
-            //throw new System.NotImplementedException();
+            logger.LogInformation($"Entering PinBotBackgroundService.ChannelPinsUpdatedAsync");
+            if (e.Channel.GuildId == null) return Task.CompletedTask;
+            return mediator.Publish(
+                new ChannelPinsUpdatedNotification
+                {
+                    DiscordChannel = e.Channel,
+                    LastPinTimestamp = e.LastPinTimestamp
+                }
+            );
         }
 
         private async Task ReactionAddedAsync(DiscordClient sender, MessageReactionAddEventArgs e)

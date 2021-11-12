@@ -18,9 +18,6 @@ namespace PinBot.Core.Services
             this.pinBotContext = pinBotContext;
             this.pinService = pinService;
         }
-        // auth people
-        // check auth
-        // remove auth
 
         public async Task<bool> AuthorizeIdAsync(ulong userOrRoleId, ulong guildOrChannelId)
         {
@@ -43,12 +40,25 @@ namespace PinBot.Core.Services
 
             return rows > 0;
         }
+        
+        public async Task<bool> RemoveAuthorizedIdAsync(ulong userOrRoleId, ulong guildOrChannelId)
+        {
+            var existing =
+                await pinBotContext
+                    .Authorizations
+                    .Where(x => x.UserOrRoleId == userOrRoleId && x.GuildOrChannelId == guildOrChannelId)
+                    .FirstOrDefaultAsync();
 
-        // public Task<bool> IsAuthorizedAsync(ulong userOrRoleId, ulong guildOrChannelId)
-        // {
-        //     return pinBotContext.Authorizations.AnyAsync(x =>
-        //         x.UserOrRoleId == userOrRoleId && x.GuildOrChannelId == guildOrChannelId);
-        // }
+            if (existing == null)
+                return true;
+
+            pinBotContext.Authorizations.Remove(existing);
+
+            var rows = await pinBotContext.SaveChangesAsync();
+
+            return rows > 0;
+        }
+
         public Task<bool> IsAuthorizedAsync(AuthorizedUserRequest request)
         {
             if (request.IsAdmin) return Task.FromResult(true);

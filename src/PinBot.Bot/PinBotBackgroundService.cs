@@ -38,6 +38,15 @@ namespace PinBot.Application
 
             mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
             cancellationToken.Register(OnStopping);
+            
+            // discordClient.GuildAvailable += async (sender, args) =>
+            // {
+            //     var commands = await sender.GetGuildApplicationCommandsAsync(args.Guild.Id);
+            //     foreach (var command in commands)
+            //     {
+            //         sender.DeleteGuildApplicationCommandAsync(args.Guild.Id, command.Id);
+            //     }
+            // };
 
             discordClient.MessageReactionAdded += ReactionAddedAsync;
             discordClient.MessageReactionRemoved += ReactionRemovedAsync;

@@ -44,6 +44,7 @@ namespace PinBot.Application
             var success = await pinBoardService.AttachChannelToPinBoardAsync(new ChannelPinBoardRequest
             {
                 PinBoardChannelId = channel.Id,
+                PinnedMessageChannelId = ctx.Guild.Id,
                 IsGlobalBoard = true
             });
 

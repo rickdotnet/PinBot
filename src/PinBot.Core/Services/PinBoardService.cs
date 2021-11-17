@@ -25,69 +25,71 @@ namespace PinBot.Core.Services
 
         public async Task<bool> AttachChannelToPinBoardAsync(ChannelPinBoardRequest request)
         {
-            var existing = 
-                await pinBotContext.
-                    PinBoardMappings.
-                    FirstOrDefaultAsync(
-                        x=>
-                            x.PinBoardChannelId == request.PinBoardChannelId &&
-                            x.PinnedMessageChannelId == request.PinnedMessageChannelId &&
-                            x.IsGlobalBoard == request.IsGlobalBoard
-                            );
-            
+            var existing =
+                await pinBotContext.PinBoardMappings.FirstOrDefaultAsync(
+                    x =>
+                        x.PinBoardChannelId == request.PinBoardChannelId &&
+                        x.PinnedMessageChannelId == request.PinnedMessageChannelId &&
+                        x.IsGlobalBoard == request.IsGlobalBoard
+                );
+
             if (existing != null) return true; // TODO: do we want to return true here?
 
             pinBotContext.PinBoardMappings.Add(request.ToEntity());
-            
+
             var rows = await pinBotContext.SaveChangesAsync();
             return rows > 0;
         }
+
         public async Task<bool> RemoveChannelFromPinBoardAsync(ChannelPinBoardRequest request)
         {
-            var existing = 
-                await pinBotContext.
-                    PinBoardMappings.
-                    FirstOrDefaultAsync(
-                        x=>
-                            x.PinBoardChannelId == request.PinBoardChannelId &&
-                            x.PinnedMessageChannelId == request.PinnedMessageChannelId &&
-                            x.IsGlobalBoard == request.IsGlobalBoard
-                    );
-            
+            var existing =
+                await pinBotContext.PinBoardMappings.FirstOrDefaultAsync(
+                    x =>
+                        x.PinBoardChannelId == request.PinBoardChannelId &&
+                        x.PinnedMessageChannelId == request.PinnedMessageChannelId &&
+                        x.IsGlobalBoard == request.IsGlobalBoard
+                );
+
             if (existing == null) return true; // TODO: do we want to return true here?
 
             pinBotContext.PinBoardMappings.Remove(existing);
-            
+
             var rows = await pinBotContext.SaveChangesAsync();
             return rows > 0;
         }
-        
+
         public async Task Handle(ChannelDeletedNotification notification, CancellationToken cancellationToken)
         {
-            var existingChannels = 
-                await pinBotContext.
-                    PinBoardMappings.
-                    Where(
-                        x=>
+            var existingChannels =
+                await pinBotContext.PinBoardMappings.Where(
+                        x =>
                             x.PinBoardChannelId == notification.ChannelId ||
                             x.PinnedMessageChannelId == notification.ChannelId
                     )
                     .ToListAsync(cancellationToken);
-            
+
             if (!existingChannels.Any()) return; // TODO: do we want to return true here?
 
             foreach (var channel in existingChannels)
-                pinBotContext.PinBoardMappings.Remove(channel);    
-            
+                pinBotContext.PinBoardMappings.Remove(channel);
+
             await pinBotContext.SaveChangesAsync(cancellationToken);
         }
-        
-        public async Task LogToPinboardsAsync(ulong channelId, string message)
+
+        public async Task LogToPinboardsAsync(ulong channelId, string message, ulong? guildId = null)
         {
             var channelIds = await pinBotContext
                 .PinBoardMappings
-                .Where(x =>x.IsGlobalBoard || x.PinnedMessageChannelId == channelId)
-                .Select(x=>x.PinBoardChannelId)
+                .Where(x =>
+                    (
+                        x.IsGlobalBoard &&
+                        guildId.HasValue &&
+                        x.PinnedMessageChannelId == guildId.Value
+                    )
+                    || x.PinnedMessageChannelId == channelId
+                )
+                .Select(x => x.PinBoardChannelId)
                 .ToListAsync();
 
             foreach (var pinBoardChannelId in channelIds)
@@ -97,14 +99,11 @@ namespace PinBot.Core.Services
                     var channel = await discordClient.GetChannelAsync(pinBoardChannelId);
                     if (channel != null) await channel.SendMessageAsync(message);
                 }
-                catch (Exception ex)            
+                catch (Exception ex)
                 {
                     if (ex is not NotFoundException && ex is not BadRequestException) throw;
                 }
             }
         }
-
-
-       
     }
 }

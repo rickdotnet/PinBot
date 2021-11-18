@@ -111,7 +111,7 @@ namespace PinBot.Core
                     // TODO: don't need to log this once pin boards are 
                     await pinBoardService.LogToPinboardsAsync(
                         notification.Message.ChannelId,
-                        $"{notification.User.Mention} just pinned a message in {notification.Message.Channel.Mention}",
+                        $"{notification.User.Mention} just un-pinned a message in {notification.Message.Channel.Mention}",
                         notification.Message.Channel.GuildId
                     );
                 }

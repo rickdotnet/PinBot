@@ -8,9 +8,7 @@ See the slash commands. This will be updated with better instructions soon enoug
 Once someone is authorized, all they need to do is add a 📌 reaction to a message and PinBot will do the rest.
 
 # Contact
-Twitch: https://www.twitch.tv/rick_u
-
-Discord: https://discord.gg/YjtFQw4
+Discord: https://discord.gg/rhinostack
 
 # Disclaimer
 This bot is still very early in development. It might never get finished. What it does do though, it should do well. Slash commands are VERY iffy right now. If they don't work at first, give Discord some time to propagate the commands down to your server. If they don't work after an hour see the contact details above.

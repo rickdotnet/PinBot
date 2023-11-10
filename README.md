@@ -1,5 +1,5 @@
 # PinBot
-PinBot proof-of-concept. Why thought? Because [of this](https://support.discord.com/hc/en-us/community/posts/360030264671 "Discord Support"), there still isn't an easy way to allow people to pin messages, without also allowing them to delete other messages. This solves that for now. I suspect they will eventually split this out, but until then... PinBot is here.
+PinBot proof-of-concept. Why though? Because [of this](https://support.discord.com/hc/en-us/community/posts/360030264671 "Discord Support"), there still isn't an easy way to allow people to pin messages, without also allowing them to delete other messages. This solves that for now. I suspect they will eventually split this out, but until then... PinBot is here.
 
 # Authorizing people
 See the slash commands. This will be updated with better instructions soon enough.

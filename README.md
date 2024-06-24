@@ -1,8 +1,8 @@
+# Update 2024
+Has Discord really not split this out already? This bot is old. I just realized it was running on a dusty server on a shelf in a shed. Then, I unplugged it unbeknownst to me. The first request I get to turn this back on, I will. Between now and then, I might redo it as well. Ew.
+
 # PinBot
 PinBot proof-of-concept. Why though? Because [of this](https://support.discord.com/hc/en-us/community/posts/360030264671 "Discord Support"), there still isn't an easy way to allow people to pin messages, without also allowing them to delete other messages. This solves that for now. I suspect they will eventually split this out, but until then... PinBot is here.
-
-# Authorizing people
-See the slash commands. This will be updated with better instructions soon enough.
 
 # How to use
 Once someone is authorized, all they need to do is add a 📌 reaction to a message and PinBot will do the rest.
